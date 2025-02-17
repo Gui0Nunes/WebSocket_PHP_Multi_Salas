@@ -1,0 +1,3 @@
+Agora você tem um WebSocket totalmente funcional usando apenas PHP puro! 🎉 
+Esse servidor WebSocket pode ser usado para chats em tempo real, notificações e jogos multiplayer sem precisar de frameworks.
+Essa versão é posśivel utilizar multiplas salas.
