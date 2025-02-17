@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo Multiplayer com Salas</title>
+</head>
+<body>
+    <h1>Jogo Multiplayer - Salas</h1>
+    
+    <label>Nome da Sala:</label>
+    <input type="text" id="room" placeholder="Digite o nome da sala">
+    <button onclick="joinRoom()">Entrar</button>
+    
+    <ul id="messages"></ul>
+    
+    <input type="text" id="message" placeholder="Digite sua jogada">
+    <button onclick="sendMessage()">Enviar</button>
+
+    <script>
+//para rodar na sua própria máquina, siga as orientações abaixo
+// no lugar de ws://192.168.15.106:8080 troque por ws://127.0.0.1:8080
+// 192.168.15.106 
+var ws = new WebSocket("ws://192.168.15.106:8080");
+var currentRoom = "";
+var isConnected = false;
+
+ws.onopen = function() {
+    console.log("Conectado ao servidor WebSocket.");
+    isConnected = true;
+};
+
+ws.onerror = function(event) {
+    console.log("Erro WebSocket:", event);
+};
+
+ws.onclose = function() {
+    console.log("Conexão WebSocket fechada.");
+    isConnected = false;
+};
+
+ws.onmessage = function(event) {
+    let data = JSON.parse(event.data);
+
+    // Se a mensagem enviada for do próprio usuário, não exibe.
+    if (data.message && data.message.startsWith("Você: ")) {
+        return;
+    }
+
+    var li = document.createElement("li");
+    li.textContent = "Oponente: " + event.data;
+    document.getElementById("messages").appendChild(li);
+};
+
+function joinRoom() {
+    if (ws.readyState !== WebSocket.OPEN) {
+        console.log("WebSocket ainda não conectado. Tentando novamente em 1 segundo...");
+        setTimeout(joinRoom, 1000); // Tenta novamente depois de 1 segundo
+        return;
+    }
+
+    currentRoom = document.getElementById("room").value;
+    if (currentRoom.trim() === "") {
+        alert("Digite um nome para a sala!");
+        return;
+    }
+    ws.send(JSON.stringify({
+        action: "join",
+        room: currentRoom
+    }));
+
+    console.log("Entrando na sala:", currentRoom);
+}
+
+function sendMessage() {
+    if (ws.readyState !== WebSocket.OPEN) {
+        console.log("WebSocket ainda não conectado. Tentando novamente em 1 segundo...");
+        setTimeout(sendMessage, 1000); // Tenta novamente depois de 1 segundo
+        return;
+    }
+
+    if (currentRoom === "") {
+        alert("Entre em uma sala primeiro!");
+        return;
+    }
+
+    var message = document.getElementById("message").value;
+
+    ws.send(JSON.stringify({
+        action: "message",
+        room: currentRoom,
+        message: message
+    }));
+
+    var li = document.createElement("li");
+    li.textContent = "Você: " + message;
+    document.getElementById("messages").appendChild(li);
+}
+
+    </script>
+</body>
+</html>
